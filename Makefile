@@ -29,5 +29,5 @@ test_build_dir:
 	mkdir -p $(TEST_BUILD_DIR)
 
 test: $(TEST_BUILD_DIR)/vector $(TEST_BUILD_DIR)/bst
-	@$(TEST_BUILD_DIR)/vector
-	@$(TEST_BUILD_DIR)/bst
+	@$(TEST_BUILD_DIR)/vector 2> /dev/null
+	@$(TEST_BUILD_DIR)/bst 2> /dev/null

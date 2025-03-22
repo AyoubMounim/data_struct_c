@@ -20,15 +20,15 @@ void mubst_init(struct mubst *self, mubst_keycmp keycmp) {
 
 void mubst_deinit(struct mubst *self) { return; }
 
-void mubst_add(struct mubst *self, struct mubst_node *node) {
+int8_t mubst_add(struct mubst *self, struct mubst_node *node) {
   if (self->nodes == NULL) {
     self->nodes = node;
     node->parent = NULL;
     node->right = node->left = NULL;
-    return;
+    return 0;
   }
   if (self->keycmp == NULL) {
-    return;
+    return -1;
   }
   struct mubst_node *leaf = self->nodes;
   while (true) {
@@ -55,7 +55,7 @@ void mubst_add(struct mubst *self, struct mubst_node *node) {
       break;
     }
   }
-  return;
+  return 0;
 }
 
 struct mubst_node *mubst_find(struct mubst const *self, void const *key) {
@@ -75,10 +75,10 @@ struct mubst_node *mubst_find(struct mubst const *self, void const *key) {
   return leaf;
 }
 
-void mubst_remove(struct mubst *self, struct mubst_node *node) {
-  struct mubst_node *n = mubst_find(self, node->key);
+int8_t mubst_remove(struct mubst *self, void const *key) {
+  struct mubst_node *n = mubst_find(self, key);
   if (n == NULL) {
-    return;
+    return -1;
   }
   if (n->left == NULL && n->right == NULL) {
     // leaf case
@@ -120,7 +120,7 @@ void mubst_remove(struct mubst *self, struct mubst_node *node) {
       successor = successor->left;
     }
   }
-  return;
+  return 0;
 }
 
 void mubst_apply(struct mubst const *self,

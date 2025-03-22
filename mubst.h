@@ -24,9 +24,9 @@ void mubst_init(struct mubst *self, mubst_keycmp keycmp);
 
 void mubst_deinit(struct mubst *self);
 
-void mubst_add(struct mubst *self, struct mubst_node *node);
+int8_t mubst_add(struct mubst *self, struct mubst_node *node);
 
-void mubst_remove(struct mubst *self, struct mubst_node *node);
+int8_t mubst_remove(struct mubst *self, void const *key);
 
 struct mubst_node *mubst_find(struct mubst const *self, void const *key);
 

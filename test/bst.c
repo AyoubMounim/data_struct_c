@@ -168,7 +168,7 @@ static int test_01(void) {
 static int test_rm_leaf(void) {
   TEST_BST_INIT();
   int res = EXIT_SUCCESS;
-  mubst_remove(&bst, &p5.node);
+  mubst_remove(&bst, "Goku");
   struct mubst_node *n1 = mubst_find(&bst, "Kenobi");
   if (n1 == NULL) {
     fprintf(stderr, "failed to find %s\n", "Kenobi");
@@ -210,7 +210,7 @@ static int test_rm_leaf(void) {
 static int test_rm_single(void) {
   TEST_BST_INIT();
   int res = EXIT_SUCCESS;
-  mubst_remove(&bst, &p3.node);
+  mubst_remove(&bst, "Sogeking");
   struct mubst_node *n1 = mubst_find(&bst, "Kenobi");
   if (n1 == NULL) {
     fprintf(stderr, "failed to find %s\n", "Kenobi");
@@ -252,7 +252,7 @@ static int test_rm_single(void) {
 static int test_rm_double(void) {
   TEST_BST_INIT();
   int res = EXIT_SUCCESS;
-  mubst_remove(&bst, &p2.node);
+  mubst_remove(&bst, "Grevious");
   struct mubst_node *n1 = mubst_find(&bst, "Kenobi");
   if (n1 == NULL) {
     fprintf(stderr, "failed to find %s\n", "Kenobi");
