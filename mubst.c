@@ -2,23 +2,63 @@
 #include "mubst.h"
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdio.h>
 #include <string.h>
 
-#ifndef MUBST_ASSERT
-#include <assert.h>
-#define MUBST_ASSERT(expr) assert(expr)
-#endif
+static uint8_t default_pool_buffer[MUBST_DEFAULT_POOL_SIZE];
+static struct mubst_pool_allocator p_alloc = {
+    .buffer = default_pool_buffer,
+    .size = 0,
+    .capacity = sizeof(default_pool_buffer),
+};
+
+static struct mubst_allocator mubst_pool_allocator_instance = {
+    .ctx = &p_alloc,
+    .alloc = mubst_pool_allocator_alloc,
+    .realloc = mubst_pool_allocator_realloc,
+    .free = mubst_pool_allocator_free,
+};
 
 /* ============================================= Public functions definition */
 
-void mubst_init(struct mubst *self, mubst_keycmp keycmp) {
+void mubst_init(struct mubst *self, mubst_keycmp keycmp,
+                struct mubst_allocator *allocator) {
   memset(self, 0, sizeof(*self));
   self->keycmp = keycmp;
+  if (!allocator) {
+    allocator = &mubst_pool_allocator_instance;
+  }
+  self->allocator = allocator;
   return;
 }
 
 void mubst_deinit(struct mubst *self) { return; }
+
+struct mubst *mubst_create(mubst_keycmp keycmp,
+                           struct mubst_allocator *allocator) {
+  if (!allocator) {
+    allocator = &mubst_pool_allocator_instance;
+  }
+  struct mubst *self = allocator->alloc(allocator, sizeof(struct mubst));
+  if (!self) {
+    return NULL;
+  }
+  mubst_init(self, keycmp, allocator);
+  return self;
+}
+
+void mubst_destroy(struct mubst *self) {
+  if (!self) {
+    return;
+  }
+  mubst_deinit(self);
+  self->allocator->free(self->allocator, self);
+  self = NULL;
+  return;
+}
+
+void *mubst_alloc(struct mubst *self, size_t const size) {
+  return self->allocator->alloc(self->allocator, size);
+}
 
 int8_t mubst_add(struct mubst *self, struct mubst_node *node) {
   if (self->nodes == NULL) {
@@ -82,21 +122,29 @@ int8_t mubst_remove(struct mubst *self, void const *key) {
   }
   if (n->left == NULL && n->right == NULL) {
     // leaf case
-    if (n->parent->left == n) {
-      n->parent->left = NULL;
+    if (n->parent != NULL) {
+      if (n->parent->left == n) {
+        n->parent->left = NULL;
+      } else {
+        MUBST_ASSERT(n->parent->right == n);
+        n->parent->right = NULL;
+      }
     } else {
-      MUBST_ASSERT(n->parent->right == n);
-      n->parent->right = NULL;
+      self->nodes = NULL;
     }
   } else if (n->left == NULL || n->right == NULL) {
     // single child case
     struct mubst_node *c = (n->left) ? n->left : n->right;
     c->parent = n->parent;
-    if (n->parent->right == n) {
-      n->parent->right = c;
+    if (n->parent != NULL) {
+      if (n->parent->right == n) {
+        n->parent->right = c;
+      } else {
+        MUBST_ASSERT(n->parent->left == n);
+        n->parent->left = c;
+      }
     } else {
-      MUBST_ASSERT(n->parent->left == n);
-      n->parent->left = c;
+      self->nodes = c;
     }
   } else {
     // two children case
@@ -157,5 +205,25 @@ void mubst_apply(struct mubst const *self,
       current = current->parent;
     }
   }
+  return;
+}
+
+void *mubst_pool_allocator_alloc(void *ctx, size_t const size) {
+  struct mubst_pool_allocator *self = ctx;
+  if (self->size + size >= self->capacity) {
+    return NULL;
+  }
+  void *ptr = (void *)((uintptr_t)self->buffer + (uintptr_t)size);
+  self->size += size;
+  return ptr;
+}
+
+void *mubst_pool_allocator_realloc(void *ctx, void *ptr, size_t const size) {
+  return NULL;
+}
+
+void mubst_pool_allocator_free(void *ctx, void *ptr) {
+  (void)ctx;
+  ptr = NULL;
   return;
 }

@@ -14,7 +14,7 @@
 
 #define TEST_BST_INIT()                                                        \
   struct mubst bst;                                                            \
-  mubst_init(&bst, person_keycmp);                                             \
+  mubst_init(&bst, person_keycmp, NULL);                                       \
   struct person p1 = {                                                         \
       .name = "Kenobi",                                                        \
       .age = 42,                                                               \
