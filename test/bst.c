@@ -28,7 +28,7 @@ static struct mubst_allocator std_allocator = {
 
 #define TEST_BST_INIT()                                                        \
   struct mubst bst;                                                            \
-  mubst_init(&bst, person_keycmp, &std_allocator);                             \
+  mubst_init(&bst, person_keycmp, NULL);                                       \
   struct person *p1 = mubst_alloc(&bst, sizeof(struct person));                \
   MUBST_ASSERT(p1);                                                            \
   p1->name = "Kenobi";                                                         \
