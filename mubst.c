@@ -18,6 +18,14 @@ static struct mubst_allocator mubst_pool_allocator_instance = {
     .free = mubst_pool_allocator_free,
 };
 
+/* ============================================ Private functions definition */
+
+static void mubst_deinit_callback(struct mubst_node *node, void *args) {
+  struct mubst *tree = args;
+  mubst_free(tree, node);
+  return;
+}
+
 /* ============================================= Public functions definition */
 
 void mubst_init(struct mubst *self, mubst_keycmp keycmp,
@@ -31,7 +39,11 @@ void mubst_init(struct mubst *self, mubst_keycmp keycmp,
   return;
 }
 
-void mubst_deinit(struct mubst *self) { return; }
+void mubst_deinit(struct mubst *self) {
+  mubst_apply(self, mubst_deinit_callback, self);
+  self->nodes = NULL;
+  return;
+}
 
 struct mubst *mubst_create(mubst_keycmp keycmp,
                            struct mubst_allocator *allocator) {
@@ -57,7 +69,12 @@ void mubst_destroy(struct mubst *self) {
 }
 
 void *mubst_alloc(struct mubst *self, size_t const size) {
-  return self->allocator->alloc(self->allocator, size);
+  return self->allocator->alloc(self->allocator->ctx, size);
+}
+
+void mubst_free(struct mubst *self, struct mubst_node *node) {
+  self->allocator->free(self->allocator->ctx, node);
+  return;
 }
 
 int8_t mubst_add(struct mubst *self, struct mubst_node *node) {
@@ -132,6 +149,7 @@ int8_t mubst_remove(struct mubst *self, void const *key) {
     } else {
       self->nodes = NULL;
     }
+    mubst_free(self, n->container);
   } else if (n->left == NULL || n->right == NULL) {
     // single child case
     struct mubst_node *c = (n->left) ? n->left : n->right;
@@ -146,6 +164,7 @@ int8_t mubst_remove(struct mubst *self, void const *key) {
     } else {
       self->nodes = c;
     }
+    mubst_free(self, n->container);
   } else {
     // two children case
     struct mubst_node *successor = n->right;
@@ -167,6 +186,7 @@ int8_t mubst_remove(struct mubst *self, void const *key) {
       MUBST_ASSERT(self->keycmp(successor->left->key, n->key) > 0);
       successor = successor->left;
     }
+    mubst_free(self, successor->container);
   }
   return 0;
 }
@@ -213,7 +233,7 @@ void *mubst_pool_allocator_alloc(void *ctx, size_t const size) {
   if (self->size + size >= self->capacity) {
     return NULL;
   }
-  void *ptr = (void *)((uintptr_t)self->buffer + (uintptr_t)size);
+  void *ptr = (void *)((uintptr_t)self->buffer + (uintptr_t)self->size);
   self->size += size;
   return ptr;
 }

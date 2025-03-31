@@ -10,7 +10,7 @@
 #endif
 
 #ifndef MUBST_DEFAULT_POOL_SIZE
-#define MUBST_DEFAULT_POOL_SIZE 128
+#define MUBST_DEFAULT_POOL_SIZE 1024 * 4
 #endif
 
 typedef int8_t (*mubst_keycmp)(void const *key1, void const *key2);
@@ -31,6 +31,7 @@ struct mubst {
 struct mubst_node {
   void *key;
   void *value;
+  void *container;
   struct mubst_node *parent;
   struct mubst_node *right;
   struct mubst_node *left;
@@ -55,6 +56,8 @@ struct mubst *mubst_create(mubst_keycmp keycmp,
 void mubst_destroy(struct mubst *self);
 
 void *mubst_alloc(struct mubst *self, size_t const size);
+
+void mubst_free(struct mubst *self, struct mubst_node *node);
 
 int8_t mubst_add(struct mubst *self, struct mubst_node *node);
 
