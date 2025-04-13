@@ -9,3 +9,7 @@ Just add the `muvector.h` header file to your project.
 ## Binary Search Tree
 
 Add the `mubst.h` and `mubst.c` files to your project.
+
+## Test
+
+Run `make test` in the repo's root directory to run some basics tests.
